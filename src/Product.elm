@@ -1,56 +1,14 @@
 module Product exposing (Product, urlParser)
 
+import ProductId exposing (ProductId)
+import Slug exposing (Slug)
 import Url.Parser exposing (Parser)
 
 
 type alias Product =
-    ( ProductId, Slug )
+    ( ProductId, Slug Slug.Product )
 
 
-type Slug
-    = Slug String
-
-
-type ProductId
-    = ProductId Int
-
-
-urlParser : Parser (Product -> a) a
+urlParser : Parser (ProductId -> a) a -> Parser (Slug b -> c) c -> Parser (Product -> d) d
 urlParser =
-    Url.Parser.custom "PRODUCT"
-        (\str ->
-            case splitRoute str of
-                ( Just id, slug ) ->
-                    Just ( ProductId id, Slug slug )
-
-                _ ->
-                    Nothing
-        )
-
-
-splitRoute : String -> ( Maybe Int, String )
-splitRoute str =
-    case String.right 5 str of
-        ".html" ->
-            splitRouteHelper (String.dropRight 5 str)
-
-        _ ->
-            ( Nothing, str )
-
-
-splitRouteHelper : String -> ( Maybe Int, String )
-splitRouteHelper str =
-    let
-        parts =
-            str |> String.split "-" |> List.reverse
-    in
-    case List.head parts of
-        Nothing ->
-            ( Nothing
-            , parts |> List.reverse |> String.join "-"
-            )
-
-        Just head ->
-            ( String.toInt head
-            , parts |> List.reverse |> String.join "-"
-            )
+    Url.Parser.map Tuple.pair
